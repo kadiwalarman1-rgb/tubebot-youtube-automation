@@ -31,7 +31,19 @@ initFirebase();
 
 // Middleware
 app.use(cors({
-  origin: process.env.BASE_URL || 'http://localhost:3000',
+  origin: function(origin, callback) {
+    // Allow all origins in production, or specific in dev
+    const allowed = [
+      process.env.BASE_URL,
+      'http://localhost:3000',
+      'http://127.0.0.1:3000'
+    ].filter(Boolean);
+    if (!origin || allowed.some(a => origin.startsWith(a)) || process.env.NODE_ENV === 'production') {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now
+    }
+  },
   credentials: true
 }));
 
@@ -159,10 +171,11 @@ const fs = require('fs');
 scheduler.initScheduler();
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 YouTube Automation Server running on port ${PORT}`);
   console.log(`📺 Open http://localhost:${PORT} in your browser`);
   console.log(`⏰ Scheduler initialized - Videos will auto-upload at 10:00 AM, 2:00 PM, 7:00 PM`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
