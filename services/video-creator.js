@@ -370,7 +370,8 @@ async function createThumbnail(thumbnailText, thumbnailSubtext, thumbnailId) {
 
 /**
  * Create YouTube SHORT video using FFmpeg
- * Format: 1080x1920 vertical, max 55 seconds, colorful animated background
+ * Format: 1080x1920 vertical, max 55 seconds
+ * FIX: Proper filter_complex with [vout] label + -map "[vout]" to avoid black screen
  */
 async function createVideoWithFFmpeg(videoId, displayTexts, audioPath, title) {
   const videoPath = path.join(VIDEO_DIR, `${videoId}.mp4`);
@@ -378,148 +379,145 @@ async function createVideoWithFFmpeg(videoId, displayTexts, audioPath, title) {
 
   if (!ffmpegPath) {
     console.warn('⚠️ FFmpeg not available, creating placeholder');
-    fs.writeFileSync(videoPath, '');
+    fs.writeFileSync(videoPath, Buffer.alloc(1024));
     return videoPath;
   }
 
+  // Get audio duration, cap at 55s for YouTube Shorts
+  let audioDuration = 45;
   try {
-    // Get audio duration and cap at 55s for Shorts
-    let audioDuration = 55;
-    try {
-      const { stdout } = await execAsync(
-        `"${ffmpegPath}" -i "${audioPath}" 2>&1 | findstr Duration`
-      ).catch(async () => {
-        // Try ffprobe instead
-        return await execAsync(
-          `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`
-        );
-      });
-      const parsed = parseFloat(stdout.trim());
-      if (!isNaN(parsed) && parsed > 0) {
-        audioDuration = Math.min(Math.ceil(parsed), 55); // Max 55s for Shorts
-      }
-    } catch {
-      audioDuration = 55;
+    const probeResult = await execAsync(
+      `"${ffmpegPath}" -i "${audioPath}" 2>&1`
+    ).catch(e => ({ stdout: (e.stdout || '') + (e.stderr || '') }));
+    const match = (probeResult.stdout || '').match(/Duration:\s*(\d+):(\d+):([\d.]+)/);
+    if (match) {
+      const secs = parseInt(match[1]) * 3600 + parseInt(match[2]) * 60 + parseFloat(match[3]);
+      if (secs > 0) audioDuration = Math.min(Math.ceil(secs), 55);
     }
+  } catch {}
 
-    // Windows font path
-    const fontPath = 'C\\:/Windows/Fonts/arial.ttf';
-    
-    // Safe text escape for FFmpeg drawtext
-    const esc = (t) => t
-      .replace(/[\x00-\x1F\x7F]/g, ' ')
-      .replace(/\\/g, '\\\\')
-      .replace(/'/g, '\u2019')  // replace apostrophe with right single quotation
-      .replace(/[:\[\],;]/g, ' ')
-      .substring(0, 45);
+  console.log(`🎬 Video duration: ${audioDuration}s`);
 
-    const safeTitle = esc(title);
+  // Safe escape for FFmpeg drawtext — NO quotes, colons, brackets inside text
+  const esc = (t) => String(t || '')
+    .replace(/[\x00-\x1F\x7F]/g, ' ')
+    .replace(/\\/g, '/')
+    .replace(/'/g, '\u2019')   // curly apostrophe - safe
+    .replace(/[:"[\],;=@]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 38);
 
-    // Split display texts into segments
-    const segDur = Math.max(2, Math.floor(audioDuration / Math.max(displayTexts.length, 1)));
-    const textFilters = displayTexts.slice(0, 10).map((text, i) => {
-      const t0 = i * segDur;
-      const t1 = Math.min((i + 1) * segDur, audioDuration);
-      const safeText = esc(text);
-      return [
-        `drawtext=fontfile='${fontPath}'`,
-        `text='${safeText}'`,
-        `fontsize=52`,
-        `fontcolor=white`,
-        `x=(w-text_w)/2`,
-        `y=(h-text_h)/2+80`,
-        `enable='between(t,${t0},${t1})'`,
-        `shadowcolor=black@0.8`,
-        `shadowx=3`,
-        `shadowy=3`,
-        `box=1`,
-        `boxcolor=black@0.4`,
-        `boxborderw=18`
-      ].join(':');
-    });
+  const safeTitle = esc(title) || 'TubeBot Short';
+  const segDur = Math.max(3, Math.floor(audioDuration / Math.max(displayTexts.length, 1)));
 
-    // Build full filter chain:
-    // 1. Animated gradient background (color cycling)
-    // 2. Red glowing top/bottom bars
-    // 3. Channel name top
-    // 4. Title at top
-    // 5. Rotating text content
-    // 6. Subscribe call-to-action bottom
-    const filterChain = [
-      // Animated color shift background using hue rotation
-      `hue=H=2*PI*t/10`,
+  // Per-segment drawtext filters (content lines, shown one by one)
+  const segTexts = displayTexts.slice(0, 8).map((text, i) => {
+    const t0 = i * segDur;
+    const t1 = Math.min((i + 1) * segDur, audioDuration);
+    const safe = esc(text);
+    return `drawtext=fontsize=46:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2+50:`
+         + `text='${safe}':enable='between(t\\,${t0}\\,${t1})':`
+         + `shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.55:boxborderw=16`;
+  });
 
-      // Top red bar
-      `drawbox=x=0:y=0:w=iw:h=90:color=#ff2d2d@0.92:t=fill`,
+  // Static overlay elements
+  const staticFilters = [
+    // Dark purple-blue animated background strips (decorative, using drawbox)
+    `drawbox=x=0:y=0:w=iw:h=ih:color=0x1a1040@0.0:t=fill`,           // base (no-op, bg comes from lavfi)
+    // Top red bar
+    `drawbox=x=0:y=0:w=iw:h=82:color=0xff2d2d@0.95:t=fill`,
+    // Bottom red bar
+    `drawbox=x=0:y=ih-105:w=iw:h=105:color=0xcc0000@0.95:t=fill`,
+    // Left accent stripe
+    `drawbox=x=0:y=82:w=8:h=ih-187:color=0xff5555@0.5:t=fill`,
+    // Right accent stripe
+    `drawbox=x=iw-8:y=82:w=8:h=ih-187:color=0xff5555@0.5:t=fill`,
+    // Brand name top
+    `drawtext=fontsize=36:fontcolor=white:x=(w-text_w)/2:y=20:text='▶ TubeBot AI':shadowcolor=black:shadowx=2:shadowy=2`,
+    // Title below top bar (gold)
+    `drawtext=fontsize=44:fontcolor=0xFFD700:x=(w-text_w)/2:y=100:text='${safeTitle}':shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.35:boxborderw=12`,
+    // CTA bottom
+    `drawtext=fontsize=36:fontcolor=white:x=(w-text_w)/2:y=ih-68:text='SUBSCRIBE and LIKE':shadowcolor=black:shadowx=2:shadowy=2`,
+  ];
 
-      // Bottom red bar
-      `drawbox=x=0:y=ih-110:w=iw:h=110:color=#cc0000@0.92:t=fill`,
+  const allFilters = [...staticFilters, ...segTexts].join(',');
 
-      // Channel / brand top
-      `drawtext=fontfile='${fontPath}':text='\u25BA TubeBot AI':fontsize=38:fontcolor=white:x=(w-text_w)/2:y=22:shadowcolor=black@0.5:shadowx=2:shadowy=2`,
+  // ── Method 1: Full animated video with text overlays ──
+  // Key fix: use -map "[vout]" not -map 0:v after filter_complex
+  const cmd1 = [
+    `"${ffmpegPath}" -y`,
+    `-f lavfi -i "color=c=0x1a1040:size=1080x1920:rate=25"`,
+    `-i "${audioPath}"`,
+    `-filter_complex "[0:v]${allFilters}[vout]"`,
+    `-map "[vout]" -map 1:a`,
+    `-c:v libx264 -preset fast -crf 22`,
+    `-c:a aac -b:a 128k`,
+    `-t ${audioDuration}`,
+    `-movflags +faststart`,
+    `-pix_fmt yuv420p`,
+    `"${videoPath}"`
+  ].join(' ');
 
-      // Title text (bold, gold, top area)
-      `drawtext=fontfile='${fontPath}':text='${safeTitle}':fontsize=46:fontcolor=#FFD700:x=(w-text_w)/2:y=120:shadowcolor=black@0.9:shadowx=3:shadowy=3:box=1:boxcolor=black@0.3:boxborderw=12`,
-
-      // Main content text (scrolling segments)
-      ...textFilters,
-
-      // Subscribe CTA bottom
-      `drawtext=fontfile='${fontPath}':text='SUBSCRIBE & LIKE for more!':fontsize=40:fontcolor=white:x=(w-text_w)/2:y=ih-72:shadowcolor=black@0.7:shadowx=2:shadowy=2`,
-    ].join(',');
-
-    // Use animated gradient input (colorspectrum lavfi source)
-    const ffmpegCmd = [
-      `"${ffmpegPath}"`,
-      `-f lavfi -i "color=c=#1a1a40:size=1080x1920:rate=25"`,  // dark blue-purple base
-      `-f lavfi -i "color=c=#ff2d2d@0.0:size=1080x1920:rate=25"`,  // transparent overlay
-      `-i "${audioPath}"`,
-      `-filter_complex`,
-      `"[0][1]blend=all_mode=overlay[base];[base]${filterChain}"`,
-      `-map 0:v -map 2:a`,
-      `-c:v libx264 -preset fast -crf 22`,
-      `-c:a aac -b:a 128k`,
-      `-t ${audioDuration}`,
-      `-movflags +faststart`,
-      `-aspect 9:16`,
-      `"${videoPath}" -y`
-    ].join(' ');
-
-    console.log('🎬 Creating YouTube Short with animated background...');
-    await execAsync(ffmpegCmd, { timeout: 300000 });
-
-    // Verify output
-    if (!fs.existsSync(videoPath) || fs.statSync(videoPath).size < 1024) {
-      throw new Error('FFmpeg produced empty/invalid video');
-    }
-
-    console.log(`✅ YouTube Short created: ${audioDuration}s, 1080x1920`);
-    return videoPath;
-
-  } catch (error) {
-    console.error('FFmpeg Short creation error:', error.message);
-
-    // Simple fallback - solid color with just audio
-    try {
-      const ffmpegPath2 = checkFFmpeg();
-      const fallbackCmd = [
-        `"${ffmpegPath2}"`,
-        `-f lavfi -i "color=c=#1a1040:size=1080x1920:rate=25"`,
-        `-i "${audioPath}"`,
-        `-map 0:v -map 1:a`,
-        `-c:v libx264 -preset ultrafast -crf 28`,
-        `-c:a aac -b:a 96k`,
-        `-t 55`,
-        `-movflags +faststart`,
-        `"${videoPath}" -y`
-      ].join(' ');
-      await execAsync(fallbackCmd, { timeout: 120000 });
-      console.log('✅ Fallback Short video created');
+  try {
+    console.log('🎬 Creating Short (Method 1: Full animated)...');
+    await execAsync(cmd1, { timeout: 300000 });
+    if (fs.existsSync(videoPath) && fs.statSync(videoPath).size > 50000) {
+      console.log(`✅ Short created! Size: ${Math.round(fs.statSync(videoPath).size / 1024)}KB, Duration: ${audioDuration}s`);
       return videoPath;
-    } catch (err2) {
-      console.error('Fallback also failed:', err2.message);
-      throw new Error('Could not create video. Check FFmpeg installation.');
     }
+    throw new Error('Output too small or missing');
+  } catch (err1) {
+    console.warn('⚠️ Method 1 failed:', err1.message.substring(0, 120));
+  }
+
+  // ── Method 2: Simple color + audio, no text (always works if FFmpeg exists) ──
+  const cmd2 = [
+    `"${ffmpegPath}" -y`,
+    `-f lavfi -i "color=c=0x0d0d2b:size=1080x1920:rate=25"`,
+    `-i "${audioPath}"`,
+    `-filter_complex "[0:v]drawbox=x=0:y=0:w=iw:h=80:color=0xff2d2d@0.9:t=fill,drawtext=fontsize=50:fontcolor=0xFFD700:x=(w-text_w)/2:y=240:text='${safeTitle}':shadowcolor=black:shadowx=3:shadowy=3[vout]"`,
+    `-map "[vout]" -map 1:a`,
+    `-c:v libx264 -preset ultrafast -crf 26`,
+    `-c:a aac -b:a 96k`,
+    `-t ${audioDuration}`,
+    `-movflags +faststart`,
+    `-pix_fmt yuv420p`,
+    `"${videoPath}"`
+  ].join(' ');
+
+  try {
+    console.log('🎬 Creating Short (Method 2: Simple)...');
+    await execAsync(cmd2, { timeout: 180000 });
+    if (fs.existsSync(videoPath) && fs.statSync(videoPath).size > 5000) {
+      console.log('✅ Short created (Method 2)');
+      return videoPath;
+    }
+  } catch (err2) {
+    console.warn('⚠️ Method 2 failed:', err2.message.substring(0, 80));
+  }
+
+  // ── Method 3: Bare minimum — just color + audio, no filters ──
+  const cmd3 = [
+    `"${ffmpegPath}" -y`,
+    `-f lavfi -i "color=c=black:size=1080x1920:rate=25"`,
+    `-i "${audioPath}"`,
+    `-map 0:v -map 1:a`,
+    `-c:v libx264 -preset ultrafast -crf 30`,
+    `-c:a aac -b:a 64k`,
+    `-t ${audioDuration}`,
+    `-pix_fmt yuv420p`,
+    `"${videoPath}"`
+  ].join(' ');
+
+  try {
+    console.log('🎬 Creating Short (Method 3: Bare minimum)...');
+    await execAsync(cmd3, { timeout: 120000 });
+    console.log('✅ Short created (Method 3 - bare)');
+    return videoPath;
+  } catch (err3) {
+    console.error('❌ All methods failed:', err3.message.substring(0, 80));
+    throw new Error('FFmpeg video creation failed. Check FFmpeg installation.');
   }
 }
 
