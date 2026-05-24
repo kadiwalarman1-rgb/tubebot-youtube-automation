@@ -1,0 +1,18 @@
+language = "nodejs"
+run = "node server.js"
+entrypoint = "server.js"
+hidden = [".config", "package-lock.json", "node_modules"]
+
+[nix]
+channel = "stable-22_11"
+
+[env]
+PORT = "3000"
+
+[deployment]
+run = ["node", "server.js"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 3000
+externalPort = 80

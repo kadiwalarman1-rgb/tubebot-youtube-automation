@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Environment variables (NEVER commit this!)
+.env
+
+# Storage files (videos, audio, thumbnails)
+storage/videos/
+storage/audio/
+storage/thumbnails/
+storage/drive-imports/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+dist/
+build/
+
+# Firebase credentials
+serviceAccountKey.json
+firebase-adminsdk-*.json

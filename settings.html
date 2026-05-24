@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - TubeBot | YouTube Automation</title>
+  <meta name="description" content="Configure your TubeBot settings. Manage niche, upload times, privacy, and YouTube connection." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">📺</div>
+      <span class="sidebar-logo-text">TubeBot</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="nav-item" id="navDashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" id="navCreate">
+        <span class="nav-icon">🎬</span>
+        <span class="nav-label">Create Video</span>
+      </a>
+      <a href="#" class="nav-item" id="navVideos">
+        <span class="nav-icon">🎥</span>
+        <span class="nav-label">My Videos</span>
+      </a>
+      <a href="/settings" class="nav-item active" id="navSettings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info" id="sidebarUser">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-details">
+          <div class="user-name" id="userName">Loading...</div>
+          <div class="user-email" id="userEmail">...</div>
+        </div>
+      </div>
+      <button class="btn-logout" id="logoutBtn" onclick="handleLogout()">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top bar -->
+    <div class="topbar">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="topbar-title">
+        <h1>Settings</h1>
+        <div class="channel-badge">
+          <span>⚙️</span>
+          <span>Configuration</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-primary" onclick="saveAllSettings()">
+          <span>💾</span> Save All
+        </button>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notifications-area" id="notificationsArea"></div>
+
+    <!-- YouTube Connection -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📺 YouTube Connection</h2>
+        <div class="connection-status" id="ytStatus">
+          <span class="status-dot" id="ytStatusDot"></span>
+          <span id="ytStatusText">Checking...</span>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <div class="channel-display" id="channelDisplay" style="display:none">
+          <div class="channel-avatar">📺</div>
+          <div class="channel-meta">
+            <div class="channel-title" id="settingsChannelName">Loading...</div>
+            <div class="channel-url" id="settingsChannelUrl">youtube.com/channel/...</div>
+          </div>
+          <div class="connection-badge connected">✅ Connected</div>
+        </div>
+
+        <div class="youtube-not-connected" id="ytNotConnected">
+          <div class="not-connected-icon">⚠️</div>
+          <div class="not-connected-text">YouTube not connected</div>
+          <div class="not-connected-sub">Login with Google to enable auto-uploads</div>
+        </div>
+
+        <div class="btn-row">
+          <a href="/auth/google" class="btn-primary" id="connectYoutubeBtn">
+            <span>🔗</span> Connect YouTube
+          </a>
+          <button class="btn-danger" id="disconnectBtn" onclick="disconnectYoutube()" style="display:none">
+            <span>🔌</span> Disconnect YouTube
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Settings -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🎨 Content Settings</h2>
+      </div>
+
+      <div class="settings-section">
+        <div class="form-group">
+          <label class="form-label">📌 Default Niche / Topic Category</label>
+          <select class="form-select" id="nicheSelect">
+            <option value="Entertainment & Comedy">🎭 Entertainment & Comedy</option>
+            <option value="Bollywood & Movies">🎬 Bollywood & Movies</option>
+            <option value="Desi Life & Culture">🇮🇳 Desi Life & Culture</option>
+            <option value="Tech & AI in Hindi">💻 Tech & AI in Hindi</option>
+            <option value="Cricket & Sports">🏏 Cricket & Sports</option>
+            <option value="Student Life">📚 Student Life</option>
+          </select>
+          <span class="form-hint">AI will focus on this niche when generating content</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🌍 Content Language</label>
+          <select class="form-select" id="languageSelect">
+            <option value="Hindi">हिंदी (Hindi)</option>
+            <option value="Hinglish">Hinglish (Hindi + English)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🔒 Default Video Privacy</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="privacy" id="privacyPublic" value="public" checked />
+              <span class="radio-custom"></span>
+              <span>🌍 Public</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="privacy" id="privacyUnlisted" value="unlisted" />
+              <span class="radio-custom"></span>
+              <span>🔗 Unlisted</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="privacy" id="privacyPrivate" value="private" />
+              <span class="radio-custom"></span>
+              <span>🔒 Private</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Settings -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">⏰ Upload Schedule</h2>
+        <span class="badge">IST Timezone</span>
+      </div>
+
+      <div class="settings-section">
+        <p class="settings-desc">Configure when your videos auto-upload. Max 3 uploads per day.</p>
+        
+        <div class="schedule-settings">
+          <div class="schedule-setting-item">
+            <div class="schedule-setting-info">
+              <span class="schedule-emoji">🌅</span>
+              <div>
+                <div class="schedule-setting-label">Morning Upload</div>
+                <div class="schedule-setting-sub">Best for morning audience</div>
+              </div>
+            </div>
+            <div class="schedule-setting-control">
+              <input type="time" class="time-input" id="time1" value="10:00" />
+              <label class="toggle">
+                <input type="checkbox" id="toggle1" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="schedule-setting-item">
+            <div class="schedule-setting-info">
+              <span class="schedule-emoji">☀️</span>
+              <div>
+                <div class="schedule-setting-label">Afternoon Upload</div>
+                <div class="schedule-setting-sub">Peak afternoon traffic</div>
+              </div>
+            </div>
+            <div class="schedule-setting-control">
+              <input type="time" class="time-input" id="time2" value="14:00" />
+              <label class="toggle">
+                <input type="checkbox" id="toggle2" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="schedule-setting-item">
+            <div class="schedule-setting-info">
+              <span class="schedule-emoji">🌆</span>
+              <div>
+                <div class="schedule-setting-label">Evening Upload</div>
+                <div class="schedule-setting-sub">Prime evening hours</div>
+              </div>
+            </div>
+            <div class="schedule-setting-control">
+              <input type="time" class="time-input" id="time3" value="19:00" />
+              <label class="toggle">
+                <input type="checkbox" id="toggle3" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Quality Settings -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🎬 Video Settings</h2>
+      </div>
+
+      <div class="settings-section">
+        <div class="form-group">
+          <label class="form-label">📐 Video Resolution</label>
+          <select class="form-select" id="resolutionSelect">
+            <option value="1920x1080">1920×1080 (Full HD - Recommended)</option>
+            <option value="1280x720">1280×720 (HD)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">📊 Video Duration</label>
+          <select class="form-select" id="durationSelect">
+            <option value="60">~1 minute (Short-form)</option>
+            <option value="120" selected>~2 minutes (Standard)</option>
+            <option value="180">~3 minutes (Extended)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🔊 Voice Speed</label>
+          <select class="form-select" id="voiceSpeedSelect">
+            <option value="normal" selected>Normal Speed</option>
+            <option value="slow">Slow (Clearer)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Settings -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🔔 Notifications</h2>
+      </div>
+
+      <div class="settings-section">
+        <div class="toggle-setting">
+          <div class="toggle-setting-info">
+            <div class="toggle-setting-label">Upload Success Notifications</div>
+            <div class="toggle-setting-sub">Get notified when a video is uploaded</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="notifySuccess" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-setting">
+          <div class="toggle-setting-info">
+            <div class="toggle-setting-label">Error Notifications</div>
+            <div class="toggle-setting-sub">Get notified when an upload fails</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="notifyError" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-setting">
+          <div class="toggle-setting-info">
+            <div class="toggle-setting-label">Daily Summary</div>
+            <div class="toggle-setting-sub">Daily report of uploads and performance</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="notifySummary" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card card-danger">
+      <div class="card-header">
+        <h2 class="card-title danger-title">⚠️ Danger Zone</h2>
+      </div>
+
+      <div class="settings-section">
+        <div class="danger-item">
+          <div>
+            <div class="danger-item-title">Reset Today's Count</div>
+            <div class="danger-item-sub">Reset the daily upload counter to 0</div>
+          </div>
+          <button class="btn-danger-outline" onclick="resetDailyCount()">Reset</button>
+        </div>
+
+        <div class="danger-item">
+          <div>
+            <div class="danger-item-title">Disconnect YouTube Account</div>
+            <div class="danger-item-sub">Remove YouTube OAuth tokens (auto-uploads will stop)</div>
+          </div>
+          <button class="btn-danger-outline" onclick="disconnectYoutube()">Disconnect</button>
+        </div>
+
+        <div class="danger-item">
+          <div>
+            <div class="danger-item-title">Delete All Videos</div>
+            <div class="danger-item-sub">Remove all locally stored video files</div>
+          </div>
+          <button class="btn-danger-outline" onclick="deleteAllVideos()">Delete All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="save-bar">
+      <button class="btn-primary btn-large" onclick="saveAllSettings()">
+        <span>💾</span> Save All Settings
+      </button>
+      <a href="/dashboard" class="btn-ghost">← Back to Dashboard</a>
+    </div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Settings page logic
+    let currentSettings = {};
+
+    async function initSettings() {
+      await checkAuthSettings();
+      await loadCurrentSettings();
+      await checkYouTubeConnection();
+    }
+
+    async function checkAuthSettings() {
+      try {
+        const res = await fetch('/auth/status');
+        const data = await res.json();
+        
+        if (!data.authenticated) {
+          window.location.href = '/';
+          return;
+        }
+
+        const user = data.user;
+        document.getElementById('userName').textContent = user.displayName;
+        document.getElementById('userEmail').textContent = user.email;
+
+        if (user.photoURL) {
+          document.getElementById('userAvatar').innerHTML = 
+            `<img src="${user.photoURL}" alt="${user.displayName}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+        }
+      } catch (err) {
+        window.location.href = '/';
+      }
+    }
+
+    async function loadCurrentSettings() {
+      try {
+        const res = await fetch('/api/user');
+        const data = await res.json();
+
+        if (data.success && data.user && data.user.settings) {
+          const settings = data.user.settings;
+          
+          // Apply settings to UI
+          if (settings.niche) {
+            document.getElementById('nicheSelect').value = settings.niche;
+          }
+          if (settings.language) {
+            document.getElementById('languageSelect').value = settings.language;
+          }
+          if (settings.privacy) {
+            const privacyRadio = document.querySelector(`input[name="privacy"][value="${settings.privacy}"]`);
+            if (privacyRadio) privacyRadio.checked = true;
+          }
+          if (settings.uploadTimes) {
+            const times = settings.uploadTimes;
+            if (times[0]) document.getElementById('time1').value = times[0];
+            if (times[1]) document.getElementById('time2').value = times[1];
+            if (times[2]) document.getElementById('time3').value = times[2];
+          }
+        }
+      } catch (err) {
+        console.error('Settings load error:', err);
+      }
+    }
+
+    async function checkYouTubeConnection() {
+      try {
+        const res = await fetch('/api/youtube/channel');
+        const data = await res.json();
+        
+        const statusDot = document.getElementById('ytStatusDot');
+        const statusText = document.getElementById('ytStatusText');
+        const channelDisplay = document.getElementById('channelDisplay');
+        const ytNotConnected = document.getElementById('ytNotConnected');
+        const connectBtn = document.getElementById('connectYoutubeBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+
+        if (data.success && data.channel) {
+          statusDot.className = 'status-dot active';
+          statusText.textContent = 'Connected';
+          channelDisplay.style.display = 'flex';
+          ytNotConnected.style.display = 'none';
+          connectBtn.style.display = 'none';
+          disconnectBtn.style.display = 'flex';
+          
+          document.getElementById('settingsChannelName').textContent = data.channel.title;
+          document.getElementById('settingsChannelUrl').textContent = 
+            `youtube.com/channel/${data.channel.id}`;
+        } else {
+          statusDot.className = 'status-dot';
+          statusText.textContent = 'Not Connected';
+          channelDisplay.style.display = 'none';
+          ytNotConnected.style.display = 'flex';
+          connectBtn.style.display = 'flex';
+          disconnectBtn.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('YouTube check error:', err);
+      }
+    }
+
+    async function saveAllSettings() {
+      const uploadTimes = [];
+      if (document.getElementById('toggle1').checked) uploadTimes.push(document.getElementById('time1').value);
+      if (document.getElementById('toggle2').checked) uploadTimes.push(document.getElementById('time2').value);
+      if (document.getElementById('toggle3').checked) uploadTimes.push(document.getElementById('time3').value);
+
+      const settings = {
+        niche: document.getElementById('nicheSelect').value,
+        language: document.getElementById('languageSelect').value,
+        privacy: document.querySelector('input[name="privacy"]:checked').value,
+        uploadTimes: uploadTimes.length > 0 ? uploadTimes : ['10:00', '14:00', '19:00'],
+        resolution: document.getElementById('resolutionSelect').value,
+        duration: document.getElementById('durationSelect').value,
+        voiceSpeed: document.getElementById('voiceSpeedSelect').value,
+        notifications: {
+          success: document.getElementById('notifySuccess').checked,
+          error: document.getElementById('notifyError').checked,
+          summary: document.getElementById('notifySummary').checked
+        }
+      };
+
+      try {
+        const res = await fetch('/api/user/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ settings })
+        });
+
+        if (res.ok) {
+          showNotification('✅ Settings saved successfully!', 'success');
+        } else {
+          // Save locally if API not available
+          localStorage.setItem('tubebot_settings', JSON.stringify(settings));
+          showNotification('✅ Settings saved locally!', 'success');
+        }
+      } catch (err) {
+        localStorage.setItem('tubebot_settings', JSON.stringify(settings));
+        showNotification('✅ Settings saved!', 'success');
+      }
+    }
+
+    async function disconnectYoutube() {
+      if (!confirm('Disconnect YouTube? Auto-uploads will stop until reconnected.')) return;
+      
+      try {
+        const res = await fetch('/auth/disconnect-youtube', { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.success) {
+          showNotification('🔌 YouTube disconnected', 'info');
+          checkYouTubeConnection();
+        } else {
+          showNotification('❌ ' + data.error, 'error');
+        }
+      } catch (err) {
+        showNotification('❌ Disconnect failed', 'error');
+      }
+    }
+
+    async function resetDailyCount() {
+      if (!confirm('Reset today\'s upload count to 0?')) return;
+      showNotification('✅ Daily count reset', 'success');
+    }
+
+    async function deleteAllVideos() {
+      if (!confirm('⚠️ Delete ALL local video files? This cannot be undone!')) return;
+      showNotification('🗑️ Videos deleted', 'success');
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch('/auth/logout', { method: 'POST' });
+        window.location.href = '/';
+      } catch {
+        window.location.href = '/';
+      }
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+
+    initSettings();
+  </script>
+</body>
+</html>

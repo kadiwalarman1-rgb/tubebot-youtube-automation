@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TubeBot - YouTube Automation | AI-Powered Hindi Content Creator</title>
+  <meta name="description" content="Automate your YouTube channel with AI-generated Hindi content. Create and upload videos automatically 3x daily with TubeBot." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Login page specific styles */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .login-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 45, 45, 0.25) 0%, transparent 70%);
+      top: -200px;
+      right: -100px;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255, 45, 45, 0.15) 0%, transparent 70%);
+      bottom: -100px;
+      left: -100px;
+      animation-delay: 3s;
+    }
+
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(180, 0, 255, 0.1) 0%, transparent 70%);
+      top: 50%;
+      left: 10%;
+      animation-delay: 1.5s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: rgba(15, 15, 25, 0.85);
+      backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 45, 45, 0.2);
+      border-radius: 24px;
+      padding: 48px 40px;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 45, 45, 0.1);
+      animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-area {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .logo-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #ff2d2d, #cc0000);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 36px;
+      box-shadow: 0 10px 30px rgba(255, 45, 45, 0.4);
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 10px 30px rgba(255, 45, 45, 0.4); }
+      50% { box-shadow: 0 10px 50px rgba(255, 45, 45, 0.7); }
+    }
+
+    .logo-title {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ff2d2d, #ff6b6b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-subtitle {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 6px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .features-list {
+      margin-bottom: 32px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .feature-item:last-child {
+      border-bottom: none;
+    }
+
+    .feature-icon {
+      font-size: 20px;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      width: 100%;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #ff2d2d 0%, #cc0000 100%);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 24px rgba(255, 45, 45, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-google::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: 0.5s;
+    }
+
+    .btn-google:hover::before {
+      left: 100%;
+    }
+
+    .btn-google:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255, 45, 45, 0.6);
+    }
+
+    .btn-google:active {
+      transform: translateY(0);
+    }
+
+    .google-icon {
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .google-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: rgba(255,255,255,0.3);
+      font-size: 12px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      display: block;
+      font-size: 24px;
+      font-weight: 800;
+      color: #ff2d2d;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .error-msg {
+      background: rgba(255, 45, 45, 0.1);
+      border: 1px solid rgba(255, 45, 45, 0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #ff6b6b;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* Particle dots */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(255, 45, 45, 0.4);
+      border-radius: 50%;
+      animation: particle-float linear infinite;
+    }
+
+    @keyframes particle-float {
+      0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100px) translateX(50px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background -->
+  <div class="login-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Login Card -->
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Logo -->
+      <div class="logo-area">
+        <div class="logo-icon">📺</div>
+        <div class="logo-title">TubeBot</div>
+        <div class="logo-subtitle">AI YouTube Automation</div>
+      </div>
+
+      <!-- Error message -->
+      <div class="error-msg" id="errorMsg">
+        ⚠️ Login failed. Please try again.
+      </div>
+
+      <!-- Features -->
+      <div class="features-list">
+        <div class="feature-item">
+          <span class="feature-icon">🤖</span>
+          <span>AI generates Hindi scripts automatically</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🎬</span>
+          <span>Creates & uploads 3 videos daily</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">⏰</span>
+          <span>Auto-schedules: 10AM, 2PM, 7PM</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🎙️</span>
+          <span>Hindi voice-over with gTTS</span>
+        </div>
+      </div>
+
+      <!-- Google Login Button -->
+      <a href="/auth/google" class="btn-google" id="loginBtn">
+        <div class="google-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        </div>
+        <span>Continue with Google</span>
+      </a>
+
+      <div class="divider">Secure OAuth 2.0 Login</div>
+
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-number">3x</span>
+          <span class="stat-label">Daily</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">AI</span>
+          <span class="stat-label">Powered</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">24/7</span>
+          <span class="stat-label">Auto</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check for error in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error')) {
+      document.getElementById('errorMsg').classList.add('show');
+    }
+
+    // Check if already logged in
+    fetch('/auth/status')
+      .then(r => r.json())
+      .then(data => {
+        if (data.authenticated) {
+          window.location.href = '/dashboard';
+        }
+      })
+      .catch(() => {});
+
+    // Generate particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      particle.style.left = Math.random() * 100 + 'vw';
+      particle.style.animationDuration = (Math.random() * 10 + 8) + 's';
+      particle.style.animationDelay = (Math.random() * 10) + 's';
+      particle.style.width = (Math.random() * 3 + 1) + 'px';
+      particle.style.height = particle.style.width;
+      particlesContainer.appendChild(particle);
+    }
+
+    // Loading state on button click
+    document.getElementById('loginBtn').addEventListener('click', function(e) {
+      this.innerHTML = '<span style="font-size:20px">⏳</span><span>Connecting...</span>';
+      this.style.opacity = '0.8';
+      this.style.pointerEvents = 'none';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TubeBot Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #16161f;
+      --border: rgba(255,255,255,0.08);
+      --red: #ff2d2d;
+      --red2: #cc1a1a;
+      --gold: #ffd700;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --orange: #fb923c;
+      --text: #f1f1f1;
+      --text2: #8888a0;
+      --text3: #555568;
+      --r: 12px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; }
+
+    /* LOGIN SCREEN */
+    #loginScreen {
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh;
+      background: radial-gradient(ellipse at center top, rgba(255,45,45,0.12) 0%, transparent 70%);
+    }
+    .login-box {
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:20px; padding:48px 40px; width:100%; max-width:420px;
+      box-shadow: 0 0 60px rgba(255,45,45,0.08);
+    }
+    .login-logo { text-align:center; margin-bottom:32px; }
+    .login-logo h1 { font-size:28px; font-weight:900; }
+    .login-logo h1 span { color:var(--red); }
+    .login-logo p { color:var(--text2); font-size:13px; margin-top:6px; }
+    .admin-badge {
+      display:inline-block; background:rgba(255,215,0,0.1); color:var(--gold);
+      border:1px solid rgba(255,215,0,0.3); border-radius:20px;
+      padding:4px 14px; font-size:11px; font-weight:700; letter-spacing:1px;
+      margin-bottom:8px;
+    }
+    .form-group { margin-bottom:18px; }
+    .form-label { display:block; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:8px; letter-spacing:0.5px; }
+    .form-input {
+      width:100%; padding:13px 16px;
+      background:var(--bg3); border:1px solid var(--border);
+      border-radius:var(--r); color:var(--text); font-size:14px;
+      font-family:inherit; outline:none; transition:border-color 0.2s;
+    }
+    .form-input:focus { border-color:var(--red); }
+    .btn-login {
+      width:100%; padding:14px; background:var(--red);
+      border:none; border-radius:var(--r); color:white;
+      font-size:15px; font-weight:700; cursor:pointer;
+      transition:all 0.2s; font-family:inherit;
+    }
+    .btn-login:hover { background:var(--red2); transform:translateY(-1px); }
+    .login-error { color:#ef4444; font-size:13px; text-align:center; margin-top:12px; display:none; }
+
+    /* ADMIN LAYOUT */
+    #adminApp { display:none; }
+    .admin-layout { display:flex; min-height:100vh; }
+
+    /* SIDEBAR */
+    .admin-sidebar {
+      width:240px; background:var(--bg2); border-right:1px solid var(--border);
+      padding:24px 16px; position:fixed; top:0; left:0; height:100vh;
+      overflow-y:auto; z-index:100; flex-shrink:0;
+    }
+    .sidebar-logo { padding:0 8px 24px; border-bottom:1px solid var(--border); margin-bottom:20px; }
+    .sidebar-logo h2 { font-size:18px; font-weight:800; }
+    .sidebar-logo h2 span { color:var(--red); }
+    .sidebar-logo p { font-size:11px; color:var(--gold); font-weight:600; letter-spacing:1px; }
+    .nav-section { font-size:10px; font-weight:700; color:var(--text3); letter-spacing:1.5px; padding:0 8px; margin-bottom:8px; margin-top:20px; }
+    .nav-item {
+      display:flex; align-items:center; gap:10px; padding:10px 12px;
+      border-radius:var(--r); cursor:pointer; transition:all 0.15s;
+      color:var(--text2); font-size:13px; font-weight:500; margin-bottom:2px;
+    }
+    .nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+    .nav-item.active { background:rgba(255,45,45,0.12); color:var(--red); font-weight:600; }
+    .nav-item span { font-size:16px; }
+    .sidebar-footer { padding:16px 8px 0; border-top:1px solid var(--border); margin-top:auto; }
+    .btn-logout {
+      width:100%; padding:10px; background:rgba(239,68,68,0.1);
+      border:1px solid rgba(239,68,68,0.2); border-radius:var(--r);
+      color:#ef4444; font-size:13px; font-weight:600; cursor:pointer;
+      font-family:inherit; transition:all 0.2s;
+    }
+    .btn-logout:hover { background:rgba(239,68,68,0.2); }
+
+    /* MAIN CONTENT */
+    .admin-main { margin-left:240px; flex:1; padding:32px; }
+    .page-header { margin-bottom:28px; }
+    .page-header h1 { font-size:24px; font-weight:800; }
+    .page-header p { color:var(--text2); font-size:13px; margin-top:4px; }
+
+    /* STAT CARDS */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:28px; }
+    .stat-card {
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:var(--r); padding:20px 18px;
+    }
+    .stat-value { font-size:28px; font-weight:800; }
+    .stat-label { font-size:12px; color:var(--text2); margin-top:4px; }
+    .stat-card.red .stat-value { color:var(--red); }
+    .stat-card.green .stat-value { color:var(--green); }
+    .stat-card.blue .stat-value { color:var(--blue); }
+    .stat-card.gold .stat-value { color:var(--gold); }
+    .stat-card.orange .stat-value { color:var(--orange); }
+
+    /* PANEL SECTIONS */
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    /* TABLE */
+    .table-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+    .table-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 20px; border-bottom:1px solid var(--border);
+    }
+    .table-header h2 { font-size:15px; font-weight:700; }
+    table { width:100%; border-collapse:collapse; }
+    th { padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--text2); letter-spacing:0.5px; border-bottom:1px solid var(--border); }
+    td { padding:12px 16px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,0.02); }
+    .user-info { display:flex; align-items:center; gap:10px; }
+    .user-avatar { width:32px; height:32px; border-radius:50%; background:var(--bg3); object-fit:cover; }
+    .user-avatar-placeholder { width:32px; height:32px; border-radius:50%; background:rgba(255,45,45,0.15); display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .badge { display:inline-block; padding:3px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+    .badge-green { background:rgba(34,197,94,0.12); color:var(--green); }
+    .badge-red { background:rgba(239,68,68,0.12); color:#ef4444; }
+    .badge-blue { background:rgba(59,130,246,0.12); color:var(--blue); }
+    .badge-gray { background:rgba(148,163,184,0.1); color:#94a3b8; }
+
+    /* BUTTONS */
+    .btn { padding:7px 14px; border-radius:8px; border:none; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; transition:all 0.15s; }
+    .btn-sm-green { background:rgba(34,197,94,0.12); color:var(--green); border:1px solid rgba(34,197,94,0.2); }
+    .btn-sm-green:hover { background:rgba(34,197,94,0.25); }
+    .btn-sm-red { background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+    .btn-sm-red:hover { background:rgba(239,68,68,0.25); }
+    .btn-primary { background:var(--red); color:white; padding:10px 20px; border-radius:var(--r); border:none; cursor:pointer; font-size:13px; font-weight:700; font-family:inherit; }
+    .btn-primary:hover { background:var(--red2); }
+
+    /* LOG BOX */
+    .log-box {
+      background:var(--bg); border:1px solid var(--border); border-radius:var(--r);
+      padding:16px; max-height:400px; overflow-y:auto;
+      font-family:'Courier New',monospace; font-size:12px; line-height:1.8;
+    }
+    .log-success { color:var(--green); }
+    .log-error { color:#ef4444; }
+    .log-info { color:var(--text2); }
+
+    /* TOAST */
+    .toast {
+      position:fixed; bottom:24px; right:24px; z-index:9999;
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:var(--r); padding:14px 18px; font-size:13px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.4); transform:translateY(100px);
+      opacity:0; transition:all 0.3s; max-width:320px;
+    }
+    .toast.show { transform:translateY(0); opacity:1; }
+    .toast.success { border-color:rgba(34,197,94,0.4); }
+    .toast.error { border-color:rgba(239,68,68,0.4); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-sidebar { transform:translateX(-100%); }
+      .admin-main { margin-left:0; padding:20px 16px; }
+      .stats-grid { grid-template-columns:repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="admin-badge">👑 ADMIN</div>
+      <h1>Tube<span>Bot</span></h1>
+      <p>Admin Control Panel</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ADMIN PASSWORD</label>
+      <input type="password" id="adminPassword" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">🔐 Access Admin Panel</button>
+    <div class="login-error" id="loginError">❌ Wrong password. Try again.</div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <h2>Tube<span>Bot</span></h2>
+        <p>👑 ADMIN PANEL</p>
+      </div>
+
+      <div class="nav-section">OVERVIEW</div>
+      <div class="nav-item active" onclick="showPanel('dashboard')"><span>📊</span> Dashboard</div>
+
+      <div class="nav-section">MANAGEMENT</div>
+      <div class="nav-item" onclick="showPanel('users')"><span>👥</span> Users</div>
+      <div class="nav-item" onclick="showPanel('videos')"><span>🎬</span> All Videos</div>
+      <div class="nav-item" onclick="showPanel('logs')"><span>📋</span> Upload Logs</div>
+
+      <div class="nav-section">SYSTEM</div>
+      <div class="nav-item" onclick="showPanel('scheduler')"><span>⏰</span> Scheduler</div>
+
+      <div style="flex:1"></div>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+
+      <!-- DASHBOARD PANEL -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="page-header">
+          <h1>📊 Dashboard</h1>
+          <p>TubeBot platform overview</p>
+        </div>
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card blue"><div class="stat-value" id="stat-users">--</div><div class="stat-label">👥 Total Users</div></div>
+          <div class="stat-card green"><div class="stat-value" id="stat-active">--</div><div class="stat-label">✅ Active (YouTube)</div></div>
+          <div class="stat-card red"><div class="stat-value" id="stat-videos">--</div><div class="stat-label">🎬 Total Videos</div></div>
+          <div class="stat-card gold"><div class="stat-value" id="stat-uploads">--</div><div class="stat-label">📤 Total Uploads</div></div>
+          <div class="stat-card orange"><div class="stat-value" id="stat-today">--</div><div class="stat-label">⚡ Today's Uploads</div></div>
+          <div class="stat-card green"><div class="stat-value" id="stat-rate">--%</div><div class="stat-label">📈 Success Rate</div></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <h2>🕐 Recent Activity</h2>
+            <button class="btn-primary" onclick="loadStats()">🔄 Refresh</button>
+          </div>
+          <div id="recentActivity" style="padding:20px;color:var(--text2);font-size:13px">Loading...</div>
+        </div>
+      </div>
+
+      <!-- USERS PANEL -->
+      <div class="panel" id="panel-users">
+        <div class="page-header">
+          <h1>👥 User Management</h1>
+          <p>Manage all TubeBot users</p>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <h2>All Users <span id="userCount" style="color:var(--text2);font-weight:400;font-size:13px"></span></h2>
+            <button class="btn-primary" onclick="loadUsers()">🔄 Refresh</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>USER</th>
+                  <th>EMAIL</th>
+                  <th>VIDEOS</th>
+                  <th>LAST UPLOAD</th>
+                  <th>YOUTUBE</th>
+                  <th>STATUS</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text2)">Loading users...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIDEOS PANEL -->
+      <div class="panel" id="panel-videos">
+        <div class="page-header">
+          <h1>🎬 All Videos</h1>
+          <p>Videos created across all users</p>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <h2>Recent Videos</h2>
+            <button class="btn-primary" onclick="loadVideos()">🔄 Refresh</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr><th>TITLE</th><th>USER</th><th>STATUS</th><th>CREATED</th><th>LINK</th></tr>
+              </thead>
+              <tbody id="videosTable"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text2)">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGS PANEL -->
+      <div class="panel" id="panel-logs">
+        <div class="page-header">
+          <h1>📋 Upload Logs</h1>
+          <p>Full upload history — success and failures</p>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <h2>Activity Log</h2>
+            <button class="btn-primary" onclick="loadLogs()">🔄 Refresh</button>
+          </div>
+          <div id="logsContainer" class="log-box" style="margin:0;border:none;border-radius:0">Loading logs...</div>
+        </div>
+      </div>
+
+      <!-- SCHEDULER PANEL -->
+      <div class="panel" id="panel-scheduler">
+        <div class="page-header">
+          <h1>⏰ Scheduler Control</h1>
+          <p>Auto-upload scheduler management</p>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card green">
+            <div class="stat-value" id="sched-status">--</div>
+            <div class="stat-label">Scheduler Status</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-value" id="sched-next">--</div>
+            <div class="stat-label">Next Upload</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-value" id="sched-tasks">--</div>
+            <div class="stat-label">Active Tasks</div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-top:20px">
+          <div class="table-header">
+            <h2>⚡ Manual Controls</h2>
+          </div>
+          <div style="padding:20px;display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn-primary" onclick="triggerUpload()">
+              ⚡ Trigger Upload Now (All Users)
+            </button>
+            <button class="btn" style="background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.2);padding:10px 20px;border-radius:var(--r);font-size:13px;font-weight:700" onclick="loadScheduler()">
+              🔄 Refresh Status
+            </button>
+          </div>
+          <div style="padding:0 20px 20px">
+            <p style="font-size:13px;color:var(--text2)">⏰ Scheduled times: <strong style="color:var(--text)">10:00 AM, 2:00 PM, 7:00 PM IST</strong> daily</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  let adminAuthed = false;
+
+  // ═══════════════════════════════════
+  // AUTH
+  // ═══════════════════════════════════
+  async function doLogin() {
+    const pwd = document.getElementById('adminPassword').value;
+    if (!pwd) return;
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd })
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminAuthed = true;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminApp').style.display = 'block';
+        loadStats();
+        loadUsers();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+        setTimeout(() => document.getElementById('loginError').style.display = 'none', 3000);
+      }
+    } catch (err) {
+      showToast('❌ Connection error: ' + err.message, 'error');
+    }
+  }
+
+  async function doLogout() {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    adminAuthed = false;
+    document.getElementById('adminApp').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminPassword').value = '';
+  }
+
+  // Check if already logged in
+  async function checkAdminAuth() {
+    const res = await fetch('/api/admin/status');
+    const data = await res.json();
+    if (data.isAdmin) {
+      adminAuthed = true;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminApp').style.display = 'block';
+      loadStats();
+      loadUsers();
+    }
+  }
+
+  // ═══════════════════════════════════
+  // NAVIGATION
+  // ═══════════════════════════════════
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    if (name === 'users') loadUsers();
+    else if (name === 'videos') loadVideos();
+    else if (name === 'logs') loadLogs();
+    else if (name === 'scheduler') loadScheduler();
+    else if (name === 'dashboard') loadStats();
+  }
+
+  // ═══════════════════════════════════
+  // STATS
+  // ═══════════════════════════════════
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/admin/stats');
+      const data = await res.json();
+      if (data.success) {
+        const s = data.stats;
+        document.getElementById('stat-users').textContent = s.totalUsers;
+        document.getElementById('stat-active').textContent = s.activeUsers;
+        document.getElementById('stat-videos').textContent = s.totalVideos;
+        document.getElementById('stat-uploads').textContent = s.totalUploads;
+        document.getElementById('stat-today').textContent = s.todayUploads;
+        document.getElementById('stat-rate').textContent = s.successRate + '%';
+
+        document.getElementById('recentActivity').innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+            <div style="background:var(--bg3);border-radius:10px;padding:14px">
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">📈 Platform Health</div>
+              <div style="color:${s.successRate>=80?'var(--green)':'var(--orange)'}">● ${s.successRate>=80?'Excellent':'Needs Attention'} — ${s.successRate}% success rate</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:10px;padding:14px">
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">👥 User Stats</div>
+              <div style="color:var(--text2)">${s.activeUsers} of ${s.totalUsers} users have YouTube connected</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:10px;padding:14px">
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">⚡ Today</div>
+              <div style="color:var(--gold)">${s.todayUploads} videos uploaded today</div>
+            </div>
+          </div>
+        `;
+      }
+    } catch (err) { console.error(err); }
+  }
+
+  // ═══════════════════════════════════
+  // USERS
+  // ═══════════════════════════════════
+  async function loadUsers() {
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (!data.success) return;
+      const users = data.users;
+      document.getElementById('userCount').textContent = `(${users.length})`;
+
+      document.getElementById('usersTable').innerHTML = users.length === 0
+        ? '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text2)">No users yet</td></tr>'
+        : users.map(u => `
+          <tr>
+            <td>
+              <div class="user-info">
+                ${u.photoURL ? `<img src="${u.photoURL}" class="user-avatar" onerror="this.style.display='none'"/>` : `<div class="user-avatar-placeholder">👤</div>`}
+                <div>
+                  <div style="font-weight:600;font-size:13px">${u.displayName}</div>
+                  <div style="font-size:11px;color:var(--text2)">${u.id.substring(0,10)}...</div>
+                </div>
+              </div>
+            </td>
+            <td style="color:var(--text2);font-size:12px">${u.email}</td>
+            <td><span style="font-weight:700;color:var(--red)">${u.totalVideos || 0}</span></td>
+            <td style="font-size:12px;color:var(--text2)">${u.lastUploadAt ? new Date(u.lastUploadAt).toLocaleDateString('en-IN') : 'Never'}</td>
+            <td>${u.hasYouTube ? '<span class="badge badge-green">✅ Connected</span>' : '<span class="badge badge-gray">❌ Not linked</span>'}</td>
+            <td>${u.isActive !== false ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Disabled</span>'}</td>
+            <td style="white-space:nowrap">
+              ${u.isActive !== false
+                ? `<button class="btn btn-sm-red" onclick="toggleUser('${u.id}', false)">🚫 Disable</button>`
+                : `<button class="btn btn-sm-green" onclick="toggleUser('${u.id}', true)">✅ Enable</button>`
+              }
+            </td>
+          </tr>
+        `).join('');
+    } catch (err) { console.error(err); }
+  }
+
+  async function toggleUser(userId, isActive) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive })
+      });
+      const data = await res.json();
+      if (data.success) { showToast(data.message, 'success'); loadUsers(); }
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+  }
+
+  // ═══════════════════════════════════
+  // VIDEOS
+  // ═══════════════════════════════════
+  async function loadVideos() {
+    try {
+      const res = await fetch('/api/admin/videos');
+      const data = await res.json();
+      if (!data.success) return;
+      const videos = data.videos;
+
+      document.getElementById('videosTable').innerHTML = videos.length === 0
+        ? '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text2)">No videos yet</td></tr>'
+        : videos.map(v => `
+          <tr>
+            <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">${v.title || 'Untitled'}</td>
+            <td style="font-size:12px;color:var(--text2)">${v.userId ? v.userId.substring(0,12)+'...' : '-'}</td>
+            <td>${getStatusBadge(v.status)}</td>
+            <td style="font-size:12px;color:var(--text2)">${v.createdAt ? new Date(v.createdAt).toLocaleDateString('en-IN') : '-'}</td>
+            <td>${v.youtubeUrl ? `<a href="${v.youtubeUrl}" target="_blank" style="color:var(--blue);font-size:12px">▶ Watch</a>` : '-'}</td>
+          </tr>
+        `).join('');
+    } catch (err) { console.error(err); }
+  }
+
+  function getStatusBadge(status) {
+    const map = {
+      uploaded: '<span class="badge badge-green">✅ Uploaded</span>',
+      ready: '<span class="badge badge-blue">✅ Ready</span>',
+      failed: '<span class="badge badge-red">❌ Failed</span>',
+      generating_content: '<span class="badge badge-gray">⏳ Generating</span>',
+      creating_video: '<span class="badge badge-gray">🎬 Processing</span>',
+    };
+    return map[status] || `<span class="badge badge-gray">${status || '-'}</span>`;
+  }
+
+  // ═══════════════════════════════════
+  // LOGS
+  // ═══════════════════════════════════
+  async function loadLogs() {
+    try {
+      const res = await fetch('/api/admin/logs');
+      const data = await res.json();
+      if (!data.success) return;
+      const logs = data.logs;
+
+      document.getElementById('logsContainer').innerHTML = logs.length === 0
+        ? '<span style="color:var(--text2)">No logs yet.</span>'
+        : logs.map(l => {
+            const time = l.timestamp ? new Date(l.timestamp).toLocaleString('en-IN') : '';
+            if (l.success) {
+              return `<div class="log-success">[${time}] ✅ UPLOADED: ${l.title || 'Untitled'} → ${l.youtubeVideoId || ''}</div>`;
+            } else {
+              return `<div class="log-error">[${time}] ❌ FAILED: ${l.error || 'Unknown error'}</div>`;
+            }
+          }).join('');
+    } catch (err) { console.error(err); }
+  }
+
+  // ═══════════════════════════════════
+  // SCHEDULER
+  // ═══════════════════════════════════
+  async function loadScheduler() {
+    try {
+      const res = await fetch('/api/admin/scheduler');
+      const data = await res.json();
+      if (data.success) {
+        const s = data.status;
+        document.getElementById('sched-status').textContent = s.initialized ? '🟢 ON' : '🔴 OFF';
+        document.getElementById('sched-next').textContent = s.nextUpload
+          ? new Date(s.nextUpload).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+          : '--';
+        document.getElementById('sched-tasks').textContent = s.activeTasks || 0;
+      }
+    } catch (err) { console.error(err); }
+  }
+
+  async function triggerUpload() {
+    if (!confirm('Trigger upload for ALL users right now?')) return;
+    try {
+      const res = await fetch('/api/admin/trigger-upload', { method: 'POST' });
+      const data = await res.json();
+      showToast(data.success ? '⚡ Upload triggered!' : '❌ ' + data.error, data.success ? 'success' : 'error');
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+  }
+
+  // ═══════════════════════════════════
+  // TOAST
+  // ═══════════════════════════════════
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+
+  // Init
+  checkAdminAuth();
+  setInterval(loadStats, 30000);
+</script>
+</body>
+</html>

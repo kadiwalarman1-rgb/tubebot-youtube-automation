@@ -1,0 +1,37 @@
+{
+  "name": "youtube-automation",
+  "version": "1.0.0",
+  "description": "YouTube Automation Web App with AI content generation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "start:win": "powershell -ExecutionPolicy Bypass -File start.ps1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "firebase-admin": "^12.0.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "googleapis": "^140.0.0",
+    "groq-sdk": "^0.3.3",
+    "node-cron": "^3.0.3",
+    "axios": "^1.6.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.0.0",
+    "jimp": "^0.22.12",
+    "fluent-ffmpeg": "^2.1.2",
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.7.0",
+    "cookie-parser": "^1.4.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

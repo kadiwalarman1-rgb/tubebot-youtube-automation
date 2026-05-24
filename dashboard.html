@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - TubeBot | YouTube Automation</title>
+  <meta name="description" content="Manage your automated YouTube channel. Create videos, track uploads, and monitor performance." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">📺</div>
+      <span class="sidebar-logo-text">TubeBot</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="nav-item active" id="navDashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" id="navCreate" onclick="showCreateModal(); return false;">
+        <span class="nav-icon">🎬</span>
+        <span class="nav-label">Create Video</span>
+      </a>
+      <a href="#" class="nav-item" id="navVideos" onclick="showVideosSection(); return false;">
+        <span class="nav-icon">🎥</span>
+        <span class="nav-label">My Videos</span>
+      </a>
+      <a href="/settings" class="nav-item" id="navSettings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info" id="sidebarUser">
+        <div class="user-avatar" id="userAvatar">👤</div>
+        <div class="user-details">
+          <div class="user-name" id="userName">Loading...</div>
+          <div class="user-email" id="userEmail">...</div>
+        </div>
+      </div>
+      <button class="btn-logout" id="logoutBtn" onclick="handleLogout()">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top bar -->
+    <div class="topbar">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="topbar-title">
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="channel-badge" id="channelBadge">
+          <span>📺</span>
+          <span id="channelName">Loading channel...</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-primary" id="uploadNowBtn" onclick="triggerUpload()">
+          <span>⚡</span> Upload Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Notifications area -->
+    <div class="notifications-area" id="notificationsArea"></div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card" id="statToday">
+        <div class="stat-card-icon">📅</div>
+        <div class="stat-card-content">
+          <div class="stat-card-value">
+            <span id="todayCount">0</span>
+            <span class="stat-card-max">/3</span>
+          </div>
+          <div class="stat-card-label">Today's Videos</div>
+          <div class="stat-card-sub">Daily limit: 3 uploads</div>
+          <div class="stat-card-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" id="todayProgress" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card" id="statTotal">
+        <div class="stat-card-icon">🏆</div>
+        <div class="stat-card-content">
+          <div class="stat-card-value" id="totalCount">0</div>
+          <div class="stat-card-label">Total Videos</div>
+          <div class="stat-card-sub">All time uploads</div>
+        </div>
+      </div>
+
+      <div class="stat-card" id="statNext">
+        <div class="stat-card-icon">⏰</div>
+        <div class="stat-card-content">
+          <div class="stat-card-value countdown" id="nextUploadCountdown">--:--:--</div>
+          <div class="stat-card-label">Next Upload</div>
+          <div class="stat-card-sub" id="nextUploadTime">Calculating...</div>
+        </div>
+      </div>
+
+      <div class="stat-card" id="statStatus">
+        <div class="stat-card-icon">🤖</div>
+        <div class="stat-card-content">
+          <div class="stat-card-value">
+            <span class="status-dot active"></span>
+            <span style="font-size:20px">Active</span>
+          </div>
+          <div class="stat-card-label">Bot Status</div>
+          <div class="stat-card-sub">Scheduler running</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column layout: Schedule + Quick Create -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:0;">
+
+      <!-- Upload Schedule -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header">
+          <h2 class="card-title">📅 Upload Schedule</h2>
+          <span class="badge badge-success">IST Timezone</span>
+        </div>
+        <div class="schedule-grid">
+          <div class="schedule-item" id="schedule1000">
+            <div class="schedule-time">10:00 AM</div>
+            <div class="schedule-label">Morning Upload</div>
+            <div class="schedule-status" id="status1000">⏳ Upcoming</div>
+          </div>
+          <div class="schedule-item" id="schedule1400">
+            <div class="schedule-time">2:00 PM</div>
+            <div class="schedule-label">Afternoon Upload</div>
+            <div class="schedule-status" id="status1400">⏳ Upcoming</div>
+          </div>
+          <div class="schedule-item" id="schedule1900">
+            <div class="schedule-time">7:00 PM</div>
+            <div class="schedule-label">Evening Upload</div>
+            <div class="schedule-status" id="status1900">⏳ Upcoming</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Create -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header">
+          <h2 class="card-title">🎬 Quick Create</h2>
+          <span class="badge">AI Powered</span>
+        </div>
+        <div class="topics-grid" id="topicsGrid"></div>
+        <button class="btn-primary btn-full" id="createRandomBtn" onclick="createVideo()" style="margin-top:12px">
+          <span>🎲</span> Create Random Video Now
+        </button>
+      </div>
+
+      </div>
+    </div>
+
+    <!-- Google Drive Import (full width) -->
+    <div class="card" style="margin-top:20px" id="driveImportCard">
+      <div class="card-header">
+        <h2 class="card-title">📁 Google Drive Import</h2>
+        <span class="badge" style="background:rgba(66,133,244,0.15);color:#4285f4;border-color:rgba(66,133,244,0.3)">Auto Upload</span>
+      </div>
+
+      <div style="padding: 8px 0 16px">
+        <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">
+          Drive folder ya file ka link paste karo → app automatically <strong style="color:var(--text-primary)">videos download karke YouTube pe upload kar dega</strong>. Photos automatically ignore ho jayenge. 📸✂️
+        </p>
+
+        <!-- URL Input -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input
+            type="url"
+            id="driveUrlInput"
+            placeholder="https://drive.google.com/drive/folders/... ya /file/d/..."
+            style="flex:1;min-width:280px;padding:12px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-primary);font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s"
+            onfocus="this.style.borderColor='var(--red)'"
+            onblur="this.style.borderColor='var(--border)'"
+          />
+          <button class="btn-secondary" id="driveScanBtn" onclick="scanDriveUrl()" style="white-space:nowrap">
+            🔍 Scan Link
+          </button>
+          <select id="drivePrivacy" style="padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-primary);font-size:14px;font-family:inherit;cursor:pointer">
+            <option value="public">🌍 Public</option>
+            <option value="unlisted">🔗 Unlisted</option>
+            <option value="private">🔒 Private</option>
+          </select>
+        </div>
+
+        <!-- Scan Results -->
+        <div id="driveScanResults" style="display:none;margin-top:16px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+            <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius-md);padding:12px;text-align:center">
+              <div style="font-size:22px;font-weight:800;color:#22c55e" id="driveVideoCount">0</div>
+              <div style="font-size:12px;color:var(--text-secondary)">🎬 Videos Found</div>
+            </div>
+            <div style="background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:var(--radius-md);padding:12px;text-align:center">
+              <div style="font-size:22px;font-weight:800;color:#fb923c" id="drivePhotoCount">0</div>
+              <div style="font-size:12px;color:var(--text-secondary)">📸 Photos (Skip)</div>
+            </div>
+            <div style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.2);border-radius:var(--radius-md);padding:12px;text-align:center">
+              <div style="font-size:22px;font-weight:800;color:var(--text-muted)" id="driveOtherCount">0</div>
+              <div style="font-size:12px;color:var(--text-secondary)">📄 Others (Skip)</div>
+            </div>
+          </div>
+
+          <!-- Video list preview -->
+          <div id="driveVideoList" style="max-height:180px;overflow-y:auto;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-secondary)"></div>
+
+          <button class="btn-primary btn-full" id="driveImportBtn" onclick="startDriveImport()" style="display:none">
+            <span>🚀</span> Start Upload to YouTube
+          </button>
+        </div>
+
+        <!-- Import Progress -->
+        <div id="driveImportProgress" style="display:none;margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:14px;font-weight:600;color:var(--text-primary)" id="driveProgressLabel">Uploading...</span>
+            <span style="font-size:14px;font-weight:700;color:var(--red)" id="driveProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar" style="height:8px;margin-bottom:14px">
+            <div class="progress-fill" id="driveProgressBar" style="width:0%;transition:width 0.5s ease"></div>
+          </div>
+
+          <!-- Live log -->
+          <div id="driveLogBox" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;max-height:200px;overflow-y:auto;font-family:'Courier New',monospace;font-size:12px;line-height:1.7;color:var(--text-secondary)">
+            <div style="color:var(--red)">▶ Starting Drive import...</div>
+          </div>
+
+          <!-- Results -->
+          <div id="driveResults" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Videos (full width) -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2 class="card-title">🎥 Recent Videos</h2>
+        <button class="btn-ghost" onclick="loadVideos()">🔄 Refresh</button>
+      </div>
+      <div id="videosContainer">
+        <div class="empty-state" id="emptyVideos">
+          <div class="empty-icon">🎬</div>
+          <p>No videos yet. Create your first video!</p>
+        </div>
+        <div class="videos-list" id="videosList"></div>
+      </div>
+    </div>
+
+    <!-- Channel Info -->
+    <div class="card" id="channelCard" style="display:none; margin-top:20px">
+      <div class="card-header">
+        <h2 class="card-title">📺 Channel Info</h2>
+        <button class="btn-ghost" onclick="loadChannelInfo()">Refresh</button>
+      </div>
+      <div class="channel-info" id="channelInfoContent"></div>
+    </div>
+  </main>
+
+  <!-- Create Video Modal -->
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🎬 Create New Video</h3>
+        <button class="modal-close" onclick="closeCreateModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">📌 Topic (Optional)</label>
+          <select class="form-select" id="topicSelect">
+            <option value="">🎲 Random Topic (Recommended)</option>
+            <option value="Desi Jokes aur Comedy">😂 Desi Jokes aur Comedy</option>
+            <option value="Bollywood Funny Scenes">🎬 Bollywood Funny Scenes</option>
+            <option value="Indian Memes Explained">🐸 Indian Memes Explained</option>
+            <option value="AI Ke Funny Jawab">🤖 AI Ke Funny Jawab</option>
+            <option value="Desi Life Relatable Moments">🙏 Desi Life Relatable Moments</option>
+            <option value="Funny Indian Ads">📺 Funny Indian Ads</option>
+            <option value="Bollywood Dialogues Roast">🎭 Bollywood Dialogues Roast</option>
+            <option value="Indian Students Life">📚 Indian Students Life</option>
+            <option value="Desi Parents Funny Moments">👨‍👩‍👦 Desi Parents Funny Moments</option>
+            <option value="Cricket Funny Moments">🏏 Cricket Funny Moments</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="autoUploadCheck" checked /> 
+            &nbsp;Auto-upload to YouTube after creation
+          </label>
+        </div>
+        <div class="creation-steps" id="creationSteps" style="display:none">
+          <div class="step" id="step1">
+            <div class="step-icon spinning">⏳</div>
+            <div class="step-text">Generating AI content...</div>
+          </div>
+          <div class="step" id="step2">
+            <div class="step-icon">⬜</div>
+            <div class="step-text">Creating Hindi audio</div>
+          </div>
+          <div class="step" id="step3">
+            <div class="step-icon">⬜</div>
+            <div class="step-text">Building video with FFmpeg</div>
+          </div>
+          <div class="step" id="step4">
+            <div class="step-icon">⬜</div>
+            <div class="step-text">Generating thumbnail</div>
+          </div>
+          <div class="step" id="step5">
+            <div class="step-icon">⬜</div>
+            <div class="step-text">Uploading to YouTube</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeCreateModal()" id="cancelCreateBtn">Cancel</button>
+        <button class="btn-primary" onclick="startVideoCreation()" id="startCreateBtn">
+          <span>🚀</span> Start Creating
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Videos Section Modal -->
+  <div class="modal-overlay" id="videosModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h3>🎥 All Videos</h3>
+        <button class="modal-close" onclick="closeVideosModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="allVideosContainer">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Dashboard specific logic
+    let countdownInterval = null;
+    let currentVideoId = null;
+    let pollInterval = null;
+
+    // Initialize dashboard
+    async function initDashboard() {
+      await checkAuth();
+      await loadStats();
+      await loadVideos();
+      await loadChannelInfo();
+      loadTopics();
+      startCountdown();
+      updateScheduleStatus();
+    }
+
+    // Check authentication
+    async function checkAuth() {
+      try {
+        const res = await fetch('/auth/status');
+        const data = await res.json();
+        
+        if (!data.authenticated) {
+          window.location.href = '/';
+          return;
+        }
+
+        const user = data.user;
+        document.getElementById('userName').textContent = user.displayName;
+        document.getElementById('userEmail').textContent = user.email;
+        
+        if (user.photoURL) {
+          document.getElementById('userAvatar').innerHTML = 
+            `<img src="${user.photoURL}" alt="${user.displayName}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+        }
+
+        if (!user.youtubeConnected) {
+          showNotification('⚠️ YouTube not connected. Login with Google OAuth for auto-uploads.', 'warning');
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location.href = '/';
+      }
+    }
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/youtube/stats');
+        const data = await res.json();
+        
+        if (data.success) {
+          const stats = data.stats;
+          
+          // Today's count
+          const todayCount = stats.todayVideos || 0;
+          document.getElementById('todayCount').textContent = todayCount;
+          document.getElementById('todayProgress').style.width = `${(todayCount / 3) * 100}%`;
+          
+          // Total
+          document.getElementById('totalCount').textContent = stats.totalVideos || 0;
+          
+          // Next upload
+          if (stats.nextUploadAt) {
+            const nextTime = new Date(stats.nextUploadAt);
+            document.getElementById('nextUploadTime').textContent = 
+              `At ${nextTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+            startCountdownTo(nextTime);
+          }
+
+          // Channel info
+          if (stats.channelInfo) {
+            document.getElementById('channelName').textContent = stats.channelInfo.title;
+          }
+
+          // Recent videos
+          if (stats.recentVideos && stats.recentVideos.length > 0) {
+            renderVideos(stats.recentVideos);
+          }
+        }
+      } catch (err) {
+        console.error('Stats load failed:', err);
+      }
+    }
+
+    // Load channel info
+    async function loadChannelInfo() {
+      try {
+        const res = await fetch('/api/youtube/channel');
+        const data = await res.json();
+        
+        if (data.success && data.channel) {
+          const ch = data.channel;
+          document.getElementById('channelName').textContent = ch.title;
+          document.getElementById('channelCard').style.display = 'block';
+          document.getElementById('channelInfoContent').innerHTML = `
+            <div class="channel-stats">
+              <div class="channel-stat">
+                <div class="channel-stat-value">${formatNumber(ch.subscriberCount)}</div>
+                <div class="channel-stat-label">Subscribers</div>
+              </div>
+              <div class="channel-stat">
+                <div class="channel-stat-value">${formatNumber(ch.videoCount)}</div>
+                <div class="channel-stat-label">Videos</div>
+              </div>
+              <div class="channel-stat">
+                <div class="channel-stat-value">${formatNumber(ch.viewCount)}</div>
+                <div class="channel-stat-label">Total Views</div>
+              </div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.log('Channel info not available');
+      }
+    }
+
+    // Load topics
+    function loadTopics() {
+      const topics = [
+        { icon: '😂', text: 'Desi Jokes' },
+        { icon: '🎬', text: 'Bollywood' },
+        { icon: '🐸', text: 'Indian Memes' },
+        { icon: '🤖', text: 'AI Funny' },
+        { icon: '🏏', text: 'Cricket' },
+        { icon: '📚', text: 'Student Life' }
+      ];
+
+      const grid = document.getElementById('topicsGrid');
+      grid.innerHTML = topics.map(t => `
+        <button class="topic-chip" onclick="createVideo('${t.text}')">
+          ${t.icon} ${t.text}
+        </button>
+      `).join('');
+    }
+
+    // Load videos
+    async function loadVideos() {
+      try {
+        const res = await fetch('/api/video/list');
+        const data = await res.json();
+        
+        if (data.success && data.videos.length > 0) {
+          renderVideos(data.videos);
+          document.getElementById('emptyVideos').style.display = 'none';
+        } else {
+          document.getElementById('emptyVideos').style.display = 'flex';
+          document.getElementById('videosList').innerHTML = '';
+        }
+      } catch (err) {
+        console.error('Videos load failed:', err);
+      }
+    }
+
+    // Render videos
+    function renderVideos(videos) {
+      const list = document.getElementById('videosList');
+      document.getElementById('emptyVideos').style.display = 'none';
+      
+      list.innerHTML = videos.map(video => `
+        <div class="video-item" id="video-${video.id}">
+          <div class="video-thumb">
+            ${video.thumbnailUrl 
+              ? `<img src="${video.thumbnailUrl}" alt="${video.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`
+              : ''}
+            <div class="video-thumb-placeholder" style="${video.thumbnailUrl ? 'display:none' : 'display:flex'}">🎬</div>
+          </div>
+          <div class="video-details">
+            <div class="video-title">${video.title || 'Processing...'}</div>
+            <div class="video-meta">
+              <span class="status-badge status-${video.status}">${getStatusEmoji(video.status)} ${video.status}</span>
+              <span>${formatDate(video.createdAt)}</span>
+            </div>
+            ${video.youtubeUrl 
+              ? `<a href="${video.youtubeUrl}" target="_blank" class="yt-link">▶ Watch on YouTube</a>` 
+              : ''}
+          </div>
+          <div class="video-actions">
+            ${video.status === 'ready' && !video.youtubeVideoId
+              ? `<button class="btn-small btn-primary" onclick="uploadVideo('${video.id}')">📤 Upload</button>`
+              : ''}
+            <button class="btn-small btn-ghost" onclick="deleteVideo('${video.id}')">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Show create modal
+    function showCreateModal() {
+      document.getElementById('createModal').classList.add('show');
+      document.getElementById('creationSteps').style.display = 'none';
+      document.getElementById('startCreateBtn').style.display = 'flex';
+      document.getElementById('cancelCreateBtn').textContent = 'Cancel';
+    }
+
+    // Close create modal
+    function closeCreateModal() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+      document.getElementById('createModal').classList.remove('show');
+    }
+
+    // Start video creation
+    async function startVideoCreation() {
+      const topic = document.getElementById('topicSelect').value;
+      const autoUpload = document.getElementById('autoUploadCheck').checked;
+
+      document.getElementById('creationSteps').style.display = 'block';
+      document.getElementById('startCreateBtn').style.display = 'none';
+      document.getElementById('cancelCreateBtn').textContent = 'Close';
+
+      // Reset steps
+      document.querySelectorAll('.step').forEach((step, i) => {
+        step.querySelector('.step-icon').textContent = i === 0 ? '⏳' : '⬜';
+        step.querySelector('.step-icon').classList.toggle('spinning', i === 0);
+        step.classList.remove('done', 'active');
+      });
+
+      try {
+        const res = await fetch('/api/video/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic: topic || null, uploadAfter: autoUpload })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          showNotification('❌ Failed to start video creation: ' + data.error, 'error');
+          return;
+        }
+
+        currentVideoId = data.videoId;
+        showNotification('🚀 Video creation started!', 'success');
+
+        // Poll for status
+        pollVideoStatus(data.videoId, autoUpload);
+
+      } catch (err) {
+        showNotification('❌ Error: ' + err.message, 'error');
+      }
+    }
+
+    // Poll video status
+    function pollVideoStatus(videoId, includeUpload) {
+      const statusMap = {
+        'generating_content': { step: 0, text: 'AI is writing script...' },
+        'generating_audio': { step: 1, text: 'Generating Hindi voice...' },
+        'creating_video': { step: 2, text: 'FFmpeg creating video...' },
+        'creating_thumbnail': { step: 3, text: 'Creating thumbnail...' },
+        'ready': { step: 4, text: 'Video ready!' },
+        'uploading': { step: 4, text: 'Uploading to YouTube...' },
+        'uploaded': { step: 4, text: 'Uploaded to YouTube! 🎉' }
+      };
+
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/video/status/${videoId}`);
+          const data = await res.json();
+
+          if (!data.success) return;
+
+          const video = data.video;
+          const status = video.status;
+
+          // Update steps UI
+          const stepInfo = statusMap[status];
+          if (stepInfo) {
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, i) => {
+              if (i < stepInfo.step) {
+                step.querySelector('.step-icon').textContent = '✅';
+                step.querySelector('.step-icon').classList.remove('spinning');
+                step.classList.add('done');
+                step.classList.remove('active');
+              } else if (i === stepInfo.step) {
+                step.querySelector('.step-icon').textContent = '⏳';
+                step.querySelector('.step-icon').classList.add('spinning');
+                step.classList.add('active');
+                step.classList.remove('done');
+              }
+            });
+          }
+
+          // Check if done
+          if (status === 'uploaded' || status === 'ready') {
+            clearInterval(pollInterval);
+            pollInterval = null;
+
+            document.querySelectorAll('.step').forEach(step => {
+              step.querySelector('.step-icon').textContent = '✅';
+              step.querySelector('.step-icon').classList.remove('spinning');
+              step.classList.add('done');
+            });
+
+            if (status === 'uploaded') {
+              showNotification(`🎉 Video uploaded to YouTube!`, 'success');
+            } else {
+              showNotification('✅ Video created successfully!', 'success');
+            }
+
+            loadVideos();
+            loadStats();
+
+            setTimeout(() => closeCreateModal(), 3000);
+          } else if (status === 'failed') {
+            clearInterval(pollInterval);
+            showNotification('❌ Video creation failed: ' + (video.error || 'Unknown error'), 'error');
+          }
+        } catch (err) {
+          console.error('Poll error:', err);
+        }
+      }, 3000);
+    }
+
+    // Create video (shortcut from topic chips)
+    function createVideo(topic = null) {
+      showCreateModal();
+      if (topic) {
+        document.getElementById('topicSelect').value = topic;
+      }
+    }
+
+    // Trigger immediate upload
+    async function triggerUpload() {
+      if (confirm('Create and upload a video right now?')) {
+        showCreateModal();
+        document.getElementById('autoUploadCheck').checked = true;
+      }
+    }
+
+    // Upload existing video
+    async function uploadVideo(videoId) {
+      try {
+        showNotification('📤 Starting upload...', 'info');
+        const res = await fetch(`/api/video/upload/${videoId}`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+          showNotification('📤 Upload started!', 'success');
+          setTimeout(loadVideos, 3000);
+        } else {
+          showNotification('❌ Upload failed: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showNotification('❌ Error: ' + err.message, 'error');
+      }
+    }
+
+    // Delete video
+    async function deleteVideo(videoId) {
+      if (!confirm('Delete this video?')) return;
+      try {
+        const res = await fetch(`/api/video/${videoId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById(`video-${videoId}`)?.remove();
+          showNotification('🗑️ Video deleted', 'success');
+        }
+      } catch (err) {
+        showNotification('❌ Delete failed', 'error');
+      }
+    }
+
+    // Logout
+    async function handleLogout() {
+      try {
+        await fetch('/auth/logout', { method: 'POST' });
+        window.location.href = '/';
+      } catch {
+        window.location.href = '/';
+      }
+    }
+
+    // Show videos section
+    function showVideosSection() {
+      document.getElementById('videosModal').classList.add('show');
+      loadAllVideos();
+    }
+
+    function closeVideosModal() {
+      document.getElementById('videosModal').classList.remove('show');
+    }
+
+    async function loadAllVideos() {
+      const container = document.getElementById('allVideosContainer');
+      try {
+        const res = await fetch('/api/video/list');
+        const data = await res.json();
+        
+        if (data.success && data.videos.length > 0) {
+          container.innerHTML = data.videos.map(video => `
+            <div class="video-item">
+              <div class="video-thumb">
+                ${video.thumbnailUrl 
+                  ? `<img src="${video.thumbnailUrl}" alt="${video.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`
+                  : ''}
+                <div class="video-thumb-placeholder">🎬</div>
+              </div>
+              <div class="video-details">
+                <div class="video-title">${video.title || 'Processing...'}</div>
+                <div class="video-meta">
+                  <span class="status-badge status-${video.status}">${getStatusEmoji(video.status)} ${video.status}</span>
+                  <span>${formatDate(video.createdAt)}</span>
+                </div>
+                ${video.youtubeUrl 
+                  ? `<a href="${video.youtubeUrl}" target="_blank" class="yt-link">▶ Watch on YouTube</a>` 
+                  : ''}
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎬</div><p>No videos yet</p></div>';
+        }
+      } catch (err) {
+        container.innerHTML = '<p>Error loading videos</p>';
+      }
+    }
+
+    // Countdown timer
+    function startCountdownTo(targetTime) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      
+      countdownInterval = setInterval(() => {
+        const now = new Date();
+        const diff = targetTime - now;
+        
+        if (diff <= 0) {
+          document.getElementById('nextUploadCountdown').textContent = 'NOW!';
+          clearInterval(countdownInterval);
+          setTimeout(() => {
+            loadStats();
+          }, 5000);
+          return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('nextUploadCountdown').textContent = 
+          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function startCountdown() {
+      const times = ['10:00', '14:00', '19:00'];
+      const now = new Date();
+      let nextUpload = null;
+
+      for (const timeStr of times) {
+        const [h, m] = timeStr.split(':').map(Number);
+        const uploadTime = new Date();
+        uploadTime.setHours(h, m, 0, 0);
+        if (uploadTime > now && (!nextUpload || uploadTime < nextUpload)) {
+          nextUpload = uploadTime;
+        }
+      }
+
+      if (!nextUpload) {
+        nextUpload = new Date();
+        nextUpload.setDate(nextUpload.getDate() + 1);
+        nextUpload.setHours(10, 0, 0, 0);
+      }
+
+      document.getElementById('nextUploadTime').textContent = 
+        `At ${nextUpload.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+      startCountdownTo(nextUpload);
+    }
+
+    // Update schedule status indicators
+    function updateScheduleStatus() {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTime = currentHour * 60 + currentMinute;
+
+      const schedules = [
+        { id: 'status1000', time: 10 * 60, label: '10:00 AM' },
+        { id: 'status1400', time: 14 * 60, label: '2:00 PM' },
+        { id: 'status1900', time: 19 * 60, label: '7:00 PM' }
+      ];
+
+      schedules.forEach(({ id, time }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        
+        if (currentTime > time + 5) {
+          el.textContent = '✅ Done';
+          el.className = 'schedule-status done';
+        } else if (Math.abs(currentTime - time) <= 5) {
+          el.textContent = '🔴 Live';
+          el.className = 'schedule-status live';
+        } else {
+          el.textContent = '⏳ Upcoming';
+          el.className = 'schedule-status';
+        }
+      });
+    }
+
+    // Toggle sidebar (mobile)
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+
+    // Helper functions
+    function getStatusEmoji(status) {
+      const map = { creating: '⏳', generating_content: '🤖', generating_audio: '🎙️', creating_video: '🎬', creating_thumbnail: '🖼️', ready: '✅', uploading: '📤', uploaded: '🎉', failed: '❌' };
+      return map[status] || '⏳';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num || '0';
+    }
+
+    // Initialize
+    initDashboard();
+    
+    // Refresh stats every 30 seconds
+    setInterval(loadStats, 30000);
+    setInterval(updateScheduleStatus, 60000);
+  </script>
+
+  <!-- Google Drive Import JS -->
+  <script>
+    let currentDriveJobId = null;
+    let driveJobPollTimer = null;
+    let lastScannedVideos = [];
+
+    async function scanDriveUrl() {
+      const url = document.getElementById('driveUrlInput').value.trim();
+      if (!url) {
+        showNotification('❌ Please paste a Google Drive link first', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('driveScanBtn');
+      btn.disabled = true;
+      btn.textContent = '🔄 Scanning...';
+      document.getElementById('driveScanResults').style.display = 'none';
+      document.getElementById('driveImportProgress').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/drive/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ driveUrl: url })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          if (data.needsReauth) {
+            showNotification('🔑 Please re-login to grant Google Drive access', 'error');
+            setTimeout(() => window.location.href = '/auth/google', 2000);
+            return;
+          }
+          showNotification('❌ ' + data.error, 'error');
+          return;
+        }
+
+        // Show results
+        lastScannedVideos = data.videos || [];
+        document.getElementById('driveVideoCount').textContent = data.summary.videosFound;
+        document.getElementById('drivePhotoCount').textContent = data.summary.photosSkipped;
+        document.getElementById('driveOtherCount').textContent = data.summary.othersSkipped;
+
+        // Render video list
+        const listEl = document.getElementById('driveVideoList');
+        if (lastScannedVideos.length === 0) {
+          listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted)">⚠️ No videos found in this link</div>';
+          document.getElementById('driveImportBtn').style.display = 'none';
+        } else {
+          listEl.innerHTML = lastScannedVideos.map((v, i) => `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${i===lastScannedVideos.length-1?'border-bottom:none':''}">
+              <span style="font-size:20px">🎬</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.name}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${v.mimeType || 'video'} • ${v.size ? (v.size/1024/1024).toFixed(1)+' MB' : 'size unknown'}</div>
+              </div>
+              <span style="font-size:11px;color:#22c55e;background:rgba(34,197,94,0.1);padding:3px 8px;border-radius:20px">✓ Will Upload</span>
+            </div>
+          `).join('');
+          document.getElementById('driveImportBtn').style.display = 'flex';
+        }
+
+        // Also show photos that will be skipped
+        if (data.photos && data.photos.length > 0) {
+          listEl.innerHTML += `<div style="padding:10px 14px;background:rgba(251,146,60,0.05);border-top:1px solid var(--border)">
+            <span style="font-size:12px;color:#fb923c">📸 ${data.photos.length} photo(s) will be automatically skipped: ${data.photos.slice(0,3).map(p=>p.name).join(', ')}${data.photos.length>3?'...':''}</span>
+          </div>`;
+        }
+
+        document.getElementById('driveScanResults').style.display = 'block';
+        showNotification(`✅ Found ${data.summary.videosFound} video(s), ${data.summary.photosSkipped} photo(s) will be skipped`, 'success');
+
+      } catch (err) {
+        showNotification('❌ Scan failed: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔍 Scan Link';
+      }
+    }
+
+    async function startDriveImport() {
+      const url = document.getElementById('driveUrlInput').value.trim();
+      const privacy = document.getElementById('drivePrivacy').value;
+
+      if (!url || lastScannedVideos.length === 0) {
+        showNotification('❌ Please scan a Drive link first', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('driveImportBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Starting...';
+
+      // Show progress UI
+      document.getElementById('driveScanResults').style.display = 'none';
+      document.getElementById('driveImportProgress').style.display = 'block';
+      document.getElementById('driveLogBox').innerHTML = '<div style="color:var(--red)">▶ Initializing Drive import...</div>';
+      document.getElementById('driveResults').innerHTML = '';
+
+      try {
+        const res = await fetch('/api/drive/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ driveUrl: url, privacy })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          showNotification('❌ ' + data.error, 'error');
+          btn.disabled = false;
+          btn.innerHTML = '<span>🚀</span> Start Upload to YouTube';
+          return;
+        }
+
+        currentDriveJobId = data.jobId;
+        pollDriveJob();
+
+      } catch (err) {
+        showNotification('❌ Import failed: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀</span> Start Upload to YouTube';
+      }
+    }
+
+    function pollDriveJob() {
+      if (driveJobPollTimer) clearInterval(driveJobPollTimer);
+      driveJobPollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/drive/status/${currentDriveJobId}`);
+          const data = await res.json();
+
+          if (!data.success) return;
+
+          // Update progress
+          const pct = data.progress.percent || 0;
+          document.getElementById('driveProgressBar').style.width = pct + '%';
+          document.getElementById('driveProgressPercent').textContent = pct + '%';
+
+          const statusMap = { scanning: '🔍 Scanning...', importing: `📥 Uploading ${data.progress.current}/${data.progress.total}...`, done: '✅ Complete!', failed: '❌ Failed' };
+          document.getElementById('driveProgressLabel').textContent = statusMap[data.status] || data.status;
+
+          // Update log box
+          const logBox = document.getElementById('driveLogBox');
+          logBox.innerHTML = (data.logs || []).map(l => {
+            const color = l.startsWith('✅') ? '#22c55e' : l.startsWith('❌') ? '#ef4444' : l.startsWith('⚠️') ? '#fb923c' : l.startsWith('📥') || l.startsWith('⬇️') ? '#60a5fa' : 'var(--text-secondary)';
+            return `<div style="color:${color}">${l}</div>`;
+          }).join('');
+          logBox.scrollTop = logBox.scrollHeight;
+
+          // Show results if done
+          if (data.status === 'done' || data.status === 'failed') {
+            clearInterval(driveJobPollTimer);
+            document.getElementById('driveProgressBar').style.width = '100%';
+            document.getElementById('driveProgressPercent').textContent = '100%';
+
+            // Show upload results
+            if (data.results && data.results.length > 0) {
+              const resultsHtml = data.results.map(r => `
+                <div style="display:flex;align-items:center;gap:10px;padding:10px;background:${r.status==='uploaded'?'rgba(34,197,94,0.08)':'rgba(239,68,68,0.08)'};border:1px solid ${r.status==='uploaded'?'rgba(34,197,94,0.2)':'rgba(239,68,68,0.2)'};border-radius:var(--radius-md);margin-bottom:8px">
+                  <span>${r.status==='uploaded'?'✅':'❌'}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.fileName}</div>
+                    ${r.youtubeUrl ? `<a href="${r.youtubeUrl}" target="_blank" style="font-size:12px;color:#60a5fa">▶ Watch on YouTube →</a>` : `<div style="font-size:12px;color:#ef4444">${r.error||'Failed'}</div>`}
+                  </div>
+                </div>
+              `).join('');
+              document.getElementById('driveResults').innerHTML = `<div style="margin-top:12px"><div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:8px">📊 Results:</div>${resultsHtml}</div>`;
+            }
+
+            if (data.status === 'done') {
+              showNotification('🎉 Drive import complete! Videos uploaded to YouTube', 'success');
+              loadStats(); // Refresh stats
+            } else {
+              showNotification('❌ Import failed: ' + (data.error || 'Unknown error'), 'error');
+            }
+
+            // Reset import button
+            setTimeout(() => {
+              const btn = document.getElementById('driveImportBtn');
+              if (btn) { btn.disabled = false; btn.innerHTML = '<span>🚀</span> Start Upload to YouTube'; }
+              document.getElementById('driveScanResults').style.display = 'block';
+            }, 3000);
+          }
+
+        } catch (err) {
+          console.error('Drive poll error:', err);
+        }
+      }, 2000); // Poll every 2 seconds
+    }
+
+    // Allow pressing Enter in Drive URL input
+    document.getElementById('driveUrlInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') scanDriveUrl();
+    });
+  </script>
+</body>
+</html>
