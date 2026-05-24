@@ -153,10 +153,28 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ success: false, error: 'Route not found' });
+// API: Auth status check (used by frontend)
+app.get('/auth/status', (req, res) => {
+  res.json({
+    authenticated: !!(req.session && req.session.user),
+    user: req.session && req.session.user ? {
+      displayName: req.session.user.displayName,
+      email: req.session.user.email,
+      photoURL: req.session.user.photoURL
+    } : null
+  });
 });
+
+// 404 handler — serve index.html for unknown routes (SPA fallback)
+app.use((req, res) => {
+  // If API route, return JSON error
+  if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+    return res.status(404).json({ success: false, error: 'Route not found' });
+  }
+  // Otherwise serve index page
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 
 // Create storage directories
 const fs = require('fs');
